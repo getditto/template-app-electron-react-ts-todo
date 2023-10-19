@@ -1,82 +1,50 @@
-import { useMutations, usePendingCursorOperation } from '@dittolive/react-ditto'
-import React, { useEffect, useState } from 'react'
-import './App.css'
+import React, { useState, useEffect } from "react";
+import DittoManager from "./ditto";
+import { Document, LiveQuery } from "@dittolive/ditto";
+import { Order } from "./model/Order";
+import { OrderStatusView } from "./views/OrderStatusView";
+import './App.css';
 
-const COLLECTION = 'tasks'
+export let ditto: any 
+export let liveQuery: LiveQuery
 
-const App = () => {
-  const [text, setText] = useState('')
-  const { ditto, documents: tasks } = usePendingCursorOperation({
-    collection: COLLECTION,
-  })
-  const { upsert, removeByID, updateByID } = useMutations({
-    collection: COLLECTION,
-  })
+export default function App() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!ditto) {
-      return
+    async function startDitto() {
+      ditto = DittoManager();
+      liveQuery = ditto.observeOpenOrders((docs: Document[]) => {
+        let orders = docs.map(doc => new Order(doc));
+        console.log(orders);
+        setOrders(orders);
+      });
     }
-    ditto.startSync()
 
-    return () => ditto.stopSync()
-  }, [ditto])
+    startDitto();
+    return () => {
+      liveQuery?.stop();
+      ditto.close();
+    };
+  }, []);
 
-  const updateText = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setText(e.currentTarget.value)
-
-  const addTask = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    upsert({ value: { body: text, isCompleted: false } })
-    setText('')
+  function bump(order: Order) {
+    console.log('bump, order', order);
   }
-
-  const toggleIsCompleted =
-    (taskId: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      updateByID({
-        _id: taskId,
-        updateClosure: (mutableDoc) => {
-          if (mutableDoc) {
-            mutableDoc.at("isCompleted").set(!mutableDoc.value.isCompleted)
-          }
-        },
-      })
-
-  const removeTask = (taskId: string) => () => removeByID({ _id: taskId })
 
   return (
     <div className="App">
-      <div className="count">
-        {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-      </div>
-      <form className="new" onSubmit={addTask}>
-        <input
-          placeholder="New task"
-          value={text}
-          onChange={updateText}
-          required
-        />
-        <button type="submit">Add</button>
-      </form>
-      <ul>
-        {tasks.map((task) => (
-          <li key={task.id.value}>
-            <input
-              type="checkbox"
-              checked={task.value.isCompleted}
-              onChange={toggleIsCompleted(task.id.value)}
-            />
-            <span className={task.value.isCompleted ? 'completed' : ''}>
-              {task.value.body} <code>(ID: {task.id.value})</code>
-            </span>
-            <button type="button" onClick={removeTask(task.id.value)}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+      <header className="App-header">
+        <div>
+          {orders.map((order: Order) => {
+            return <div onClick={() => bump(order)}>
+              <OrderStatusView order={order} />
+            </div>;
+          })}
+          {error && <p style={{ "color": "red" }}>{error}</p>}
+        </div>
+      </header>
     </div>
-  )
+  );
 }
-
-export default App
