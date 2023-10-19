@@ -1,17 +1,14 @@
-import React from 'react'
-import ReactDOMClient from 'react-dom/client'
-import './index.css'
-import AppContainer from './AppContainer'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import { init } from "@dittolive/ditto"
+import App from "./App";
 
-const container = document.getElementById('root')
-if (!container) {
-  throw new Error('root element not found')
-}
+(async () => {
+  await init()
+  ReactDOM.render(
+    <App />,
+    document.getElementById('root')
+  );
 
-const root = ReactDOMClient.createRoot(container)
-
-root.render(
-  <React.StrictMode>
-    <AppContainer />
-  </React.StrictMode>,
-)
+})()
