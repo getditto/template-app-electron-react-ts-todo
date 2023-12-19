@@ -12,7 +12,7 @@ This sample enables Electron's Node.js integration and disables context isolatio
 
 ## Bluetooth Low Energy on macOS
 
-If the Bluetooth Low Energy P2P transport is enabled, the application might crash in development when running on macOS due to missing permissions. In order to fix this, add your terminal app (or the app that you use to run this sample) to the list of apps allowed to use Bluetooth under **System Preferences > Security & Privacy > Bluetooth**.
+If the Bluetooth Low Energy P2P transport is enabled, the application might crash in development when running on macOS due to missing permissions. In order to fix this, add your terminal app (or the app that you use to run this sample) to the list of apps allowed to use Bluetooth under **Privacy & Security > Bluetooth** in the System Settings app.
 
 ## Bluetooth Low Energy on Linux
 
